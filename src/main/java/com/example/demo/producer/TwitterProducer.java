@@ -29,10 +29,13 @@ import com.twitter.hbc.httpclient.auth.OAuth1;
 public class TwitterProducer {
 
 	private Logger logger = LoggerFactory.getLogger(TwitterProducer.class);
-	private String consumerKey = "NlRc8831AgAeksmXdlDWFagd2";
-	private String consumerSecret = "NVdYID7ZZhj7O1guvT14JvqFdAWQ2MhV7FT7R1IOtEUQMGE9KP";
-	private String token = "3288982094-NCcs5eBMOWzGOfweuOj0PQy6oXcnCWIcNyY0sm3";
-	private String secret = "5XkFhCIsEEZsd2rGqbCRywFdnCKeRxg4ebmCB99P04FNo";
+	
+	// Please register yourself onto Twitter API (https://developer.twitter.com/en)
+	// and get the secrets and token for your usage.
+	private String consumerKey = "XXXXX";
+	private String consumerSecret = "XXXXX";
+	private String token = "XXXXX";
+	private String secret = "XXXXX";
 	List<String> terms = Lists.newArrayList("quotes");
 
 	public static void main(String[] args) {
@@ -56,21 +59,19 @@ public class TwitterProducer {
 		// Create a kafka producer
 		KafkaProducer<String, String> producer = createKafkaProducer();
 		
-		// Just for fun: Adding a shutdown hook
+		// Adding a shutdown hook
 		Runtime.getRuntime().addShutdownHook(new Thread(() -> {
 			logger.info("Stopping application");
 			hosebirdClient.stop();
 			producer.close();
 		}));
 
-		// Loops to send tweets to kafka
-		// on a different thread, or multiple different threads....
+		// Loops to send tweets to kafka on a different thread, or multiple different threads....
 		while (!hosebirdClient.isDone()) {
 			String msg = null;
 			try {
 				msg = msgQueue.poll(5, TimeUnit.SECONDS);
 			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 				hosebirdClient.stop();
 			}
@@ -78,7 +79,6 @@ public class TwitterProducer {
 			if (msg != null) {
 				logger.info(msg);
 				producer.send(new ProducerRecord<String, String>(topicName, msg), new Callback() {
-					
 					@Override
 					public void onCompletion(RecordMetadata metadata, Exception exception) {
 						if(exception != null) {
@@ -87,10 +87,8 @@ public class TwitterProducer {
 					}
 				});
 			}
-
 		}
 		logger.info("End of application!");
-
 	}
 
 	private KafkaProducer<String, String> createKafkaProducer() {
@@ -110,7 +108,7 @@ public class TwitterProducer {
 		// To have a High throughput producer, we should use below settings
 		prop.setProperty(ProducerConfig.COMPRESSION_TYPE_CONFIG, "snappy");
 		prop.setProperty(ProducerConfig.LINGER_MS_CONFIG, "20");
-		prop.setProperty(ProducerConfig.BATCH_SIZE_CONFIG, Integer.toString(32*1024));
+		prop.setProperty(ProducerConfig.BATCH_SIZE_CONFIG, Integer.toString(32*1024)); //32KB
 
 		return new KafkaProducer<>(prop);
 	}
